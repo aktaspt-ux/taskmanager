@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Task Management Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet" />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+      }
+      .task-card {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        cursor: pointer;
+      }
+      .task-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+          0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      }
+      .dragging {
+        opacity: 0.5;
+        border: 2px dashed #4f46e5;
+      }
+      .drag-over {
+        background-color: #e0e7ff;
+        border: 2px dashed #4f46e5;
+      }
+      #taskModal.flex {
+        display: flex;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 text-gray-800">
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+      <header class="text-center mb-8">
+        <h1 class="text-3xl sm:text-4xl font-bold text-gray-900">
+          Tool Management Dashboard
+        </h1>
+        <p class="text-gray-600 mt-2">
+          Organize your tasks efficiently and stay productive.
+        </p>
+      </header>
+
+      <!-- Add Task Form -->
+      <div class="mb-8 p-6 bg-white rounded-lg shadow-md max-w-4xl mx-auto">
+        <h2 class="text-2xl font-semibold mb-4 text-gray-800">
+          Add a New Task
+        </h2>
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+          <input
+            type="text"
+            id="newTaskInput"
+            placeholder="Enter new task..."
+            class="sm:col-span-2 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" />
+          <input
+            type="date"
+            id="newStartDate"
+            title="Start Date"
+            class="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" />
+          <input
+            type="date"
+            id="newDeadlineDate"
+            title="Deadline"
+            class="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" />
+          <button
+            id="addTaskBtn"
+            class="sm:col-span-4 bg-indigo-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-300">
+            Add Task
+          </button>
+        </div>
+      </div>
+
+      <!-- Task Columns -->
+      <main class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Upcoming Tasks -->
+        <div id="upcoming" class="bg-white p-6 rounded-lg shadow-md drop-zone">
+          <h2 class="text-xl font-semibold mb-4 border-b pb-2 text-gray-700">
+            Upcoming
+          </h2>
+          <div id="upcoming-tasks" class="space-y-4 min-h-[200px]"></div>
+        </div>
+
+        <!-- In Progress Tasks -->
+        <div
+          id="in-progress"
+          class="bg-white p-6 rounded-lg shadow-md drop-zone">
+          <h2 class="text-xl font-semibold mb-4 border-b pb-2 text-gray-700">
+            In Progress
+          </h2>
+          <div id="inprogress-tasks" class="space-y-4 min-h-[200px]"></div>
+        </div>
+
+        <!-- Finished Tasks -->
+        <div id="finished" class="bg-white p-6 rounded-lg shadow-md drop-zone">
+          <h2 class="text-xl font-semibold mb-4 border-b pb-2 text-gray-700">
+            Finished
+          </h2>
+          <div id="finished-tasks" class="space-y-4 min-h-[200px]"></div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Task Detail Modal -->
+    <div
+      id="taskModal"
+      class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden items-center justify-center z-50">
+      <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg mx-4">
+        <h2 class="text-2xl font-semibold mb-4 text-gray-800">Task Details</h2>
+        <div class="space-y-4">
+          <div>
+            <label
+              for="modalTaskTitle"
+              class="block text-sm font-medium text-gray-700"
+              >Title</label
+            >
+            <input
+              type="text"
+              id="modalTaskTitle"
+              class="mt-1 block w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+          </div>
+          <div>
+            <label
+              for="modalTaskDesc"
+              class="block text-sm font-medium text-gray-700"
+              >Description</label
+            >
+            <textarea
+              id="modalTaskDesc"
+              rows="5"
+              placeholder="Write your description here"
+              class="mt-1 block w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+          </div>
+          <div>
+            <label
+              for="modalStartDate"
+              class="block text-sm font-medium text-gray-700"
+              >Start Date</label
+            >
+            <input
+              type="date"
+              id="modalStartDate"
+              class="mt-1 block w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+          </div>
+          <div>
+            <label
+              for="modalDeadlineDate"
+              class="block text-sm font-medium text-gray-700"
+              >Deadline</label
+            >
+            <input
+              type="date"
+              id="modalDeadlineDate"
+              class="mt-1 block w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+          </div>
+        </div>
+        <div class="mt-6 flex justify-between items-center">
+          <button
+            id="deleteTaskBtn"
+            class="bg-red-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-300">
+            Delete
+          </button>
+          <div>
+            <button
+              id="closeModalBtn"
+              class="bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300 mr-2 transition duration-300">
+              Close
+            </button>
+            <button
+              id="saveTaskBtn"
+              class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-300">
+              Save Changes
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      // --- FIREBASE IMPORTS ---
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+      import {
+        getAuth,
+        signInAnonymously,
+        onAuthStateChanged,
+      } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+      import {
+        getFirestore,
+        collection,
+        addDoc,
+        onSnapshot,
+        doc,
+        updateDoc,
+        deleteDoc,
+        setLogLevel,
+      } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+      // --- FIREBASE CONFIG AND INITIALIZATION ---
+      const firebaseConfig = {
+        apiKey: "AIzaSyAambcqkQNowmUmSllqjA4vBNq7abk9u8k",
+        authDomain: "taskmanager-93f9d.firebaseapp.com",
+        projectId: "taskmanager-93f9d",
+        storageBucket: "taskmanager-93f9d.firebasestorage.app",
+        messagingSenderId: "896655866165",
+        appId: "1:896655866165:web:b73b13a56c21cbc412747c",
+        measurementId: "G-DE7J5SESLV",
+      };
+
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+      setLogLevel("debug");
+
+      let tasksCollectionRef = null;
+      let unsubscribe = null;
+
+      // --- AUTHENTICATION ---
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          tasksCollectionRef = collection(db, "public-tasks");
+          setupRealtimeListener();
+        } else {
+          try {
+            await signInAnonymously(auth);
+          } catch (error) {
+            console.error("Error signing in: ", error);
+          }
+        }
+      });
+
+      // --- DOM ELEMENTS ---
+      const addTaskBtn = document.getElementById("addTaskBtn");
+      const newTaskInput = document.getElementById("newTaskInput");
+      const newStartDate = document.getElementById("newStartDate");
+      const newDeadlineDate = document.getElementById("newDeadlineDate");
+      const taskColumns = {
+        upcoming: document.getElementById("upcoming-tasks"),
+        "in-progress": document.getElementById("inprogress-tasks"),
+        finished: document.getElementById("finished-tasks"),
+      };
+
+      // --- MODAL ELEMENTS ---
+      const taskModal = document.getElementById("taskModal");
+      const modalTaskTitle = document.getElementById("modalTaskTitle");
+      const modalTaskDesc = document.getElementById("modalTaskDesc");
+      const modalStartDate = document.getElementById("modalStartDate");
+      const modalDeadlineDate = document.getElementById("modalDeadlineDate");
+      const saveTaskBtn = document.getElementById("saveTaskBtn");
+      const closeModalBtn = document.getElementById("closeModalBtn");
+      const deleteTaskBtn = document.getElementById("deleteTaskBtn");
+      let currentEditingTaskId = null;
+
+      // --- FUNCTIONS ---
+
+      // Renders a single task card
+      const renderTask = (doc) => {
+        const task = doc.data();
+        const taskCard = document.createElement("div");
+        taskCard.className = "task-card p-4 rounded-lg shadow-sm border";
+        taskCard.setAttribute("draggable", "true");
+        taskCard.setAttribute("data-id", doc.id);
+
+        const title = document.createElement("h3");
+        title.className = "font-semibold text-gray-800";
+        title.textContent = task.title;
+
+        const description = document.createElement("p");
+        description.className = "text-sm text-gray-600 mt-1";
+        description.textContent = task.description || "";
+
+        const dateInfo = document.createElement("p");
+        dateInfo.className = "text-xs text-gray-500 mt-2";
+
+        taskCard.appendChild(title);
+        taskCard.appendChild(description);
+        taskCard.appendChild(dateInfo);
+
+        updateCardAppearance(
+          taskCard,
+          task.status,
+          task.startDate,
+          task.deadline
+        );
+
+        taskCard.addEventListener("click", () => openModal(doc.id, task));
+        addDragEvents(taskCard);
+
+        if (taskColumns[task.status]) {
+          taskColumns[task.status].appendChild(taskCard);
+        }
+      };
+
+      // Setup Firestore real-time listener
+      const setupRealtimeListener = () => {
+        if (unsubscribe) unsubscribe();
+        if (!tasksCollectionRef) return;
+
+        unsubscribe = onSnapshot(
+          tasksCollectionRef,
+          (snapshot) => {
+            Object.values(taskColumns).forEach((col) => (col.innerHTML = ""));
+            snapshot.docs.forEach((doc) => renderTask(doc));
+          },
+          (error) => {
+            console.error("--- Firebase Read Error ---");
+            console.error("Error fetching tasks:", error.message);
+            console.error(
+              "This usually means your Firestore security rules are blocking access."
+            );
+            console.error(
+              "Please go to your Firebase project -> Firestore -> Rules and ensure they allow read access to the 'public-tasks' collection."
+            );
+            console.error("--------------------------");
+          }
+        );
+      };
+
+      // Open the modal
+      const openModal = (id, task) => {
+        currentEditingTaskId = id;
+        modalTaskTitle.value = task.title;
+        modalTaskDesc.value = task.description;
+        modalStartDate.value = task.startDate;
+        modalDeadlineDate.value = task.deadline;
+        taskModal.classList.remove("hidden");
+        taskModal.classList.add("flex");
+      };
+
+      // Close the modal
+      const closeModal = () => {
+        taskModal.classList.add("hidden");
+        taskModal.classList.remove("flex");
+        currentEditingTaskId = null;
+      };
+
+      // --- EVENT LISTENERS ---
+
+      // Add new task
+      addTaskBtn.addEventListener("click", async () => {
+        const taskText = newTaskInput.value.trim();
+        const startDate = newStartDate.value;
+        const deadlineDate = newDeadlineDate.value;
+
+        if (taskText && startDate && deadlineDate && tasksCollectionRef) {
+          try {
+            await addDoc(tasksCollectionRef, {
+              title: taskText,
+              startDate: startDate,
+              deadline: deadlineDate,
+              description: "",
+              status: "upcoming",
+            });
+            // Clear inputs after adding
+            newTaskInput.value = "";
+            newStartDate.value = "";
+            newDeadlineDate.value = "";
+          } catch (e) {
+            console.error("--- Firebase Write Error ---");
+            console.error("Error adding document:", e.message);
+            console.error(
+              "This usually means your Firestore security rules are blocking access."
+            );
+            console.error(
+              "Please go to your Firebase project -> Firestore -> Rules and ensure they allow write access to the 'public-tasks' collection."
+            );
+            console.error("---------------------------");
+          }
+        } else {
+          console.log("Please fill out all fields.");
+        }
+      });
+
+      // Modal controls
+      closeModalBtn.addEventListener("click", closeModal);
+      taskModal.addEventListener("click", (e) => {
+        if (e.target === taskModal) closeModal();
+      });
+
+      saveTaskBtn.addEventListener("click", async () => {
+        if (currentEditingTaskId) {
+          const taskRef = doc(db, "public-tasks", currentEditingTaskId);
+          try {
+            await updateDoc(taskRef, {
+              title: modalTaskTitle.value,
+              description: modalTaskDesc.value,
+              startDate: modalStartDate.value,
+              deadline: modalDeadlineDate.value,
+            });
+            closeModal();
+          } catch (e) {
+            console.error("--- Firebase Write Error ---");
+            console.error("Error updating document:", e.message);
+            console.error(
+              "This usually means your Firestore security rules are blocking access."
+            );
+            console.error(
+              "Please go to your Firebase project -> Firestore -> Rules and ensure they allow write access to the 'public-tasks' collection."
+            );
+            console.error("---------------------------");
+          }
+        }
+      });
+
+      deleteTaskBtn.addEventListener("click", async () => {
+        if (currentEditingTaskId) {
+          const taskRef = doc(db, "public-tasks", currentEditingTaskId);
+          try {
+            await deleteDoc(taskRef);
+            closeModal();
+          } catch (e) {
+            console.error("--- Firebase Write Error ---");
+            console.error("Error deleting document:", e.message);
+            console.error(
+              "This usually means your Firestore security rules are blocking access."
+            );
+            console.error(
+              "Please go to your Firebase project -> Firestore -> Rules and ensure they allow write access to the 'public-tasks' collection."
+            );
+            console.error("---------------------------");
+          }
+        }
+      });
+
+      // --- DRAG AND DROP LOGIC ---
+      let draggedItem = null;
+
+      const addDragEvents = (item) => {
+        item.addEventListener("dragstart", () => {
+          draggedItem = item;
+          setTimeout(() => item.classList.add("dragging"), 0);
+        });
+        item.addEventListener("dragend", () => {
+          if (draggedItem) draggedItem.classList.remove("dragging");
+          draggedItem = null;
+        });
+      };
+
+      document.querySelectorAll(".drop-zone").forEach((zone) => {
+        zone.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          zone.classList.add("drag-over");
+        });
+        zone.addEventListener("dragleave", () =>
+          zone.classList.remove("drag-over")
+        );
+        zone.addEventListener("drop", async (e) => {
+          e.preventDefault();
+          zone.classList.remove("drag-over");
+          if (draggedItem) {
+            const taskId = draggedItem.getAttribute("data-id");
+            const newStatus = zone.id;
+            const taskRef = doc(db, "public-tasks", taskId);
+            try {
+              await updateDoc(taskRef, { status: newStatus });
+            } catch (error) {
+              console.error("Error updating task status: ", error);
+            }
+          }
+        });
+      });
+
+      const updateCardAppearance = (card, status, startDate, deadline) => {
+        card.className = "task-card p-4 rounded-lg shadow-sm border"; // Reset classes
+        const dateElement = card.querySelector(".text-xs");
+
+        switch (status) {
+          case "in-progress":
+            card.classList.add("bg-yellow-50", "border-yellow-200");
+            dateElement.textContent = `Start: ${startDate} | Due: ${deadline}`;
+            break;
+          case "finished":
+            card.classList.add("bg-green-50", "border-green-200");
+            dateElement.textContent = `Completed: ${deadline}`;
+            break;
+          case "upcoming":
+          default:
+            card.classList.add("bg-gray-50", "border-gray-200");
+            dateElement.textContent = `Start: ${startDate} | Due: ${deadline}`;
+            break;
+        }
+      };
+    </script>
+  </body>
+</html>
